@@ -88,7 +88,7 @@ router.post(
 );
 
 //ROUTE 3: Authenticate user using GET: /api/auth/getuser [Login Required]
-router.post("/getuser", fetchuser, async (req, res) => {
+router.get("/getuser", fetchuser, async (req, res) => {
   try {
     var userId = req.user.id;
     console.log(userId);

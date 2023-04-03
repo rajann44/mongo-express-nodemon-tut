@@ -14,7 +14,7 @@ router.get("/fetchnotes", fetchuser, async (req, res) => {
   }
 });
 
-//ROUTE 2: And note using POST: /api/notes/addnote [Login Required]
+//ROUTE 2: Add note using POST: /api/notes/addnote [Login Required]
 router.post(
   "/addnote",
   fetchuser,
@@ -38,5 +38,64 @@ router.post(
     }
   }
 );
+
+//ROUTE 3: Update note using PUT: /api/notes/updatenote [Login Required]
+router.put("/updatenote/:id", fetchuser, async (req, res) => {
+  try {
+    const { title, description, tag } = req.body;
+    //Create a newNote object
+    const newNote = {};
+    if (title) {
+      newNote.title = title;
+    }
+    if (description) {
+      newNote.description = description;
+    }
+    if (tag) {
+      newNote.tag = tag;
+    }
+
+    //Find note to be updated
+    //Find is Note present in DB?
+    let note = await Notes.findById(req.params.id);
+    if (!note) {
+      return res.status(404).send("Note Not found :(");
+    }
+    //First checking if I own the Note?
+    if (note.user.toString() !== req.user.id) {
+      return res.status(401).send("Not Allowed to update :(");
+    }
+
+    const updatedNote = await Notes.findByIdAndUpdate(
+      req.params.id,
+      { $set: newNote },
+      { new: true } //By default, when you update a document in MongoDB, the findOneAndUpdate() method returns the original document before it was updated. If you want to get the updated document instead, you can set the new option to true.
+    );
+    res.json({ updatedNote });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+//ROUTE 4: Delete note using DELETE: /api/notes/updatenote [Login Required]
+router.delete("/deletenote/:id", fetchuser, async (req, res) => {
+  try {
+    //Find note to be delete
+    //Find is Note present in DB?
+    let note = await Notes.findById(req.params.id);
+    if (!note) {
+      return res.status(404).send("Note Not found :(");
+    }
+    //First checking if I own the Note and only then allow to delete
+    if (note.user.toString() !== req.user.id) {
+      return res.status(401).send("Not Allowed to delete :(");
+    }
+
+    const deletedNote = await Notes.findByIdAndDelete(req.params.id);
+    res.json({ Success: "Note is deleted" + deletedNote });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 module.exports = router;
