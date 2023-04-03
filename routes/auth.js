@@ -6,8 +6,9 @@ var jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../uri");
 const { body, validationResult } = require("express-validator");
 const JWT_SECRETKEY = JWT_SECRET;
+const fetchuser = require("../middleware/fetchuser");
 
-//Create user using POST: /api/auth/createuser [No Login Required]
+//ROUTE 1: Create user using POST: /api/auth/createuser [No Login Required]
 router.post(
   "/createuser",
   [
@@ -50,7 +51,7 @@ router.post(
   }
 );
 
-//Authenticate user using POST: /api/auth/login [No Login Required]
+//ROUTE 2: Authenticate user using POST: /api/auth/login [No Login Required]
 router.post(
   "/login",
   [
@@ -80,6 +81,25 @@ router.post(
       };
       const authToken = jwt.sign(userID, JWT_SECRETKEY);
       res.json({ authToken });
+    } catch (error) {
+      res.status(500).json("Something went wrong, Internal server error");
+    }
+  }
+);
+
+//ROUTE 3: Authenticate user using GET: /api/auth/getuser [Login Required]
+router.get(
+  "/getuser",
+  fetchuser,
+  // [
+  //   body("email", "Please Enter Valid Email").isEmail(),
+  //   body("password", "Password cannot be blank").exists(),
+  // ],
+  async (req, res) => {
+    try {
+      var userId = req.user.id;
+      const user = await User.findOne(userId).select("-password");
+      res.send(user);
     } catch (error) {
       res.status(500).json("Something went wrong, Internal server error");
     }
