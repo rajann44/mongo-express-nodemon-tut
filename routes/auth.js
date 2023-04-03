@@ -42,12 +42,46 @@ router.post(
           id: user.id,
         },
       };
-
       const authToken = jwt.sign(userID, JWT_SECRETKEY);
-
       res.json({ authToken });
     } catch (error) {
-      res.status(500).json("Something went wrong, server error");
+      res.status(500).json("Something went wrong, Internal server error");
+    }
+  }
+);
+
+//Authenticate user using POST: /api/auth/login [No Login Required]
+router.post(
+  "/login",
+  [
+    body("email", "Please Enter Valid Email").isEmail(),
+    body("password", "Password cannot be blank").exists(),
+  ],
+  async (req, res) => {
+    //If there are Error return Bad request and Error
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const { email, password } = req.body;
+    try {
+      let user = await User.findOne({ email });
+      if (!user) {
+        return res.status(400).json({ error: "Invalid Creds Sorry :(" });
+      }
+      const passwordCompare = await bcrypt.compare(password, user.password);
+      if (!passwordCompare) {
+        return res.status(400).json({ error: "Invalid Creds Sorry :(" });
+      }
+      const userID = {
+        user: {
+          id: user.id,
+        },
+      };
+      const authToken = jwt.sign(userID, JWT_SECRETKEY);
+      res.json({ authToken });
+    } catch (error) {
+      res.status(500).json("Something went wrong, Internal server error");
     }
   }
 );
