@@ -88,22 +88,17 @@ router.post(
 );
 
 //ROUTE 3: Authenticate user using GET: /api/auth/getuser [Login Required]
-router.get(
-  "/getuser",
-  fetchuser,
-  // [
-  //   body("email", "Please Enter Valid Email").isEmail(),
-  //   body("password", "Password cannot be blank").exists(),
-  // ],
-  async (req, res) => {
-    try {
-      var userId = req.user.id;
-      const user = await User.findOne(userId).select("-password");
-      res.send(user);
-    } catch (error) {
-      res.status(500).json("Something went wrong, Internal server error");
-    }
+router.post("/getuser", fetchuser, async (req, res) => {
+  try {
+    var userId = req.user.id;
+    console.log(userId);
+    const user = await User.findById(userId).select("-password");
+    res.send(user);
+  } catch (error) {
+    res
+      .status(500)
+      .json("Something went wrong, Internal server error " + error);
   }
-);
+});
 
 module.exports = router;
